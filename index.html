@@ -6,14 +6,13 @@
     <title>AgriLocal - Marché du quartier</title>
     <meta name="description" content="Achetez et vendez des produits agricoles dans votre quartier">
     
-    <!-- PWA Support - Tout est inline, pas besoin d'images externes -->
-    <link rel="manifest" href="manifest.json">
+    <!-- Installation sur smartphone (sans Service Worker) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AgriLocal">
     <meta name="theme-color" content="#2e7d32">
     
-    <!-- Favicon inline (emoji) -->
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌽%3C/text%3E%3C/svg%3E">
     
     <link rel="stylesheet" href="style.css">
@@ -29,7 +28,7 @@
             <p class="tagline">Les producteurs de mon quartier</p>
         </header>
 
-        <!-- BANDEAU D'INSTALLATION PWA -->
+        <!-- BANDEAU D'INSTALLATION -->
         <div id="installBanner" class="install-banner" style="display: none;">
             <div class="banner-content">
                 <span>📱</span>
