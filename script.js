@@ -8,15 +8,13 @@ const firebaseConfig = {
     appId: "1:385086582928:web:ad0ec6a85783d3aa70a815"
 };
 
-// Imports
+// Imports (SANS STORAGE)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-// Initialisation
+// Initialisation (SANS STORAGE)
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 let allProducts = [];
 let currentCategory = "all";
@@ -31,40 +29,27 @@ const defaultProducts = [
 ];
 
 async function initDefaultProducts() {
-    const snapshot = await getDocs(collection(db, 'products'));
-    if (snapshot.empty) {
-        for (const product of defaultProducts) {
-            await addDoc(collection(db, 'products'), product);
+    try {
+        const snapshot = await getDocs(collection(db, 'products'));
+        if (snapshot.empty) {
+            console.log("📦 Ajout des 5 produits par défaut...");
+            for (const product of defaultProducts) {
+                await addDoc(collection(db, 'products'), product);
+            }
+            console.log("✅ Produits par défaut ajoutés !");
         }
-        console.log("✅ 5 produits par défaut ajoutés !");
+    } catch (error) {
+        console.error("Erreur init:", error);
     }
 }
 
-// ============ FONCTIONS PRINCIPALES ============
-
-// Aperçu photo
-document.getElementById('productPhoto')?.addEventListener('change', function(e) {
-    const preview = document.getElementById('photoPreview');
-    preview.innerHTML = '';
-    if (e.target.files[0]) {
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(e.target.files[0]);
-        preview.appendChild(img);
-    }
-});
-
-// Ajouter un produit
-document.getElementById('productForm')?.addEventListener('submit', async function(e) {
+// ============ AJOUTER UN PRODUIT (SANS PHOTO) ============
+document.getElementById('productForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    
+    console.log("📝 Formulaire soumis !");
+    
     try {
-        let photoURL = null;
-        const photoFile = document.getElementById('productPhoto')?.files[0];
-        if (photoFile) {
-            const storageRef = ref(storage, `products/${Date.now()}_${photoFile.name}`);
-            await uploadBytes(storageRef, photoFile);
-            photoURL = await getDownloadURL(storageRef);
-        }
-        
         const newProduct = {
             name: document.getElementById('productName').value,
             category: document.getElementById('productCategory').value,
@@ -75,22 +60,26 @@ document.getElementById('productForm')?.addEventListener('submit', async functio
             seller: document.getElementById('productSeller').value,
             phone: document.getElementById('productPhone').value,
             password: document.getElementById('productPassword').value,
-            photo: photoURL,
+            photo: null,
             createdAt: new Date().toISOString()
         };
         
+        console.log("Produit:", newProduct.name, newProduct.price, "FCFA");
+        
         await addDoc(collection(db, 'products'), newProduct);
-        document.getElementById('productForm').reset();
-        document.getElementById('photoPreview').innerHTML = '';
+        
         document.getElementById('addModal').style.display = 'none';
+        document.getElementById('productForm').reset();
+        
         alert('✅ Produit ajouté avec succès !');
+        
     } catch (error) {
-        console.error(error);
+        console.error("❌ Erreur:", error);
         alert("Erreur: " + error.message);
     }
 });
 
-// Afficher les produits
+// ============ AFFICHER LES PRODUITS ============
 function displayProducts(products) {
     const container = document.getElementById('productsList');
     const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || "";
@@ -110,7 +99,7 @@ function displayProducts(products) {
     
     container.innerHTML = filtered.map(product => `
         <div class="product-card">
-            ${product.photo ? `<img src="${product.photo}" class="product-image" alt="${product.name}">` : `<div class="product-no-image">${getCategoryEmoji(product.category)}</div>`}
+            <div class="product-no-image">${getCategoryEmoji(product.category)}</div>
             <div class="product-info">
                 <span class="product-category">${getCategoryIcon(product.category)} ${product.category}</span>
                 <div class="product-title">${product.name}</div>
@@ -150,7 +139,7 @@ function getCategoryIcon(cat) {
     return icons[cat] || "🌾";
 }
 
-// Écouter les changements en temps réel
+// ============ ÉCOUTER LES CHANGEMENTS ============
 const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
 onSnapshot(q, (snapshot) => {
     allProducts = [];
@@ -160,7 +149,7 @@ onSnapshot(q, (snapshot) => {
     displayProducts(allProducts);
 });
 
-// Filtres
+// ============ FILTRES ============
 document.querySelectorAll('.cat-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -251,7 +240,7 @@ window.addEventListener('click', (e) => {
     }
 });
 
-// ============ PWA INSTALLATION ============
+// ============ PWA ============
 let deferredPrompt;
 const installBanner = document.getElementById('installBanner');
 const installBtn = document.getElementById('installBtn');
@@ -260,7 +249,7 @@ const closeInstallBtn = document.getElementById('closeInstallBtn');
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    installBanner.style.display = 'flex';
+    if (installBanner) installBanner.style.display = 'flex';
 });
 
 installBtn?.addEventListener('click', async () => {
@@ -268,27 +257,20 @@ installBtn?.addEventListener('click', async () => {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
-            installBanner.style.display = 'none';
+            if (installBanner) installBanner.style.display = 'none';
         }
         deferredPrompt = null;
     }
 });
 
 closeInstallBtn?.addEventListener('click', () => {
-    installBanner.style.display = 'none';
+    if (installBanner) installBanner.style.display = 'none';
 });
 
-window.addEventListener('appinstalled', () => {
-    installBanner.style.display = 'none';
-});
-
-// Enregistrement du Service Worker
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker enregistré:', reg))
-        .catch(err => console.log('Erreur Service Worker:', err));
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
 }
 
 // ============ INITIALISATION ============
 initDefaultProducts();
-console.log("🔥 AgriLocal prêt !");
+console.log("🔥 AgriLocal prêt ! Les photos sont désactivées pour le moment.");
