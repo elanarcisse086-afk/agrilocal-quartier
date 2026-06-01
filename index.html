@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AgriLocal - Marché du quartier</title>
+    <meta name="description" content="Achetez et vendez des produits agricoles dans votre quartier">
+    
+    <!-- PWA Support - Tout est inline, pas besoin d'images externes -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AgriLocal">
+    <meta name="theme-color" content="#2e7d32">
+    
+    <!-- Favicon inline (emoji) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌽%3C/text%3E%3C/svg%3E">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- HEADER -->
+        <header>
+            <div class="logo">
+                <span class="logo-icon">🌽</span>
+                <h1>AgriLocal</h1>
+            </div>
+            <p class="tagline">Les producteurs de mon quartier</p>
+        </header>
+
+        <!-- BANDEAU D'INSTALLATION PWA -->
+        <div id="installBanner" class="install-banner" style="display: none;">
+            <div class="banner-content">
+                <span>📱</span>
+                <p>Installe l'app sur ton téléphone</p>
+            </div>
+            <div class="banner-buttons">
+                <button id="installBtn">Installer</button>
+                <button id="closeInstallBtn">✕</button>
+            </div>
+        </div>
+
+        <!-- CATÉGORIES RAPIDES -->
+        <div class="categories-section">
+            <h2>🛒 Catégories</h2>
+            <div class="categories-scroll">
+                <button class="cat-btn active" data-cat="all">🌍 Tous</button>
+                <button class="cat-btn" data-cat="légume">🥬 Légumes</button>
+                <button class="cat-btn" data-cat="tubercule">🥔 Tubercules</button>
+                <button class="cat-btn" data-cat="fruit">🍎 Fruits</button>
+                <button class="cat-btn" data-cat="herbe">🌿 Herbes</button>
+                <button class="cat-btn" data-cat="épice">🌶️ Épices</button>
+            </div>
+        </div>
+
+        <!-- BARRE DE RECHERCHE -->
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="🔍 Rechercher un produit, un producteur..." class="search-input">
+        </div>
+
+        <!-- LISTE DES PRODUITS -->
+        <div class="products-section">
+            <div class="section-header">
+                <h2>📦 Produits frais</h2>
+                <span id="productCount" class="count-badge">0 produits</span>
+            </div>
+            <div id="productsList" class="products-grid">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Chargement des produits...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOUTON AJOUTER -->
+        <button id="addProductBtn" class="fab">
+            <span>➕</span>
+        </button>
+    </div>
+
+    <!-- MODAL AJOUT PRODUIT -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>➕ Nouveau produit</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="productForm">
+                <div class="form-group">
+                    <label>🍎 Nom du produit <span class="required">*</span></label>
+                    <input type="text" id="productName" placeholder="Ex: Tomates fraîches" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📂 Catégorie <span class="required">*</span></label>
+                        <select id="productCategory" required>
+                            <option value="légume">🥬 Légume</option>
+                            <option value="tubercule">🥔 Tubercule</option>
+                            <option value="fruit">🍎 Fruit</option>
+                            <option value="herbe">🌿 Herbe/Feuille</option>
+                            <option value="épice">🌶️ Épice</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>💵 Prix <span class="required">*</span></label>
+                        <div class="price-group">
+                            <input type="number" id="productPrice" placeholder="0" required>
+                            <select id="productUnit">
+                                <option value="kg">kg</option>
+                                <option value="botte">botte</option>
+                                <option value="pièce">pièce</option>
+                                <option value="sac">sac</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📦 Quantité <span class="required">*</span></label>
+                        <input type="number" id="productQuantity" placeholder="Ex: 10" required>
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Votre nom <span class="required">*</span></label>
+                        <input type="text" id="productSeller" placeholder="Ex: Maman Odile" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📱 WhatsApp <span class="required">*</span></label>
+                    <input type="tel" id="productPhone" placeholder="691234567" required>
+                </div>
+
+                <div class="form-group">
+                    <label>🔐 Mot de passe <span class="required">*</span></label>
+                    <input type="password" id="productPassword" placeholder="Pour modifier/supprimer" required>
+                </div>
+
+                <div class="form-group">
+                    <label>📸 Photo (optionnel)</label>
+                    <input type="file" id="productPhoto" accept="image/*" capture="environment">
+                    <div id="photoPreview" class="photo-preview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Description (optionnel)</label>
+                    <textarea id="productDesc" placeholder="Qualité, récolte, etc..." rows="2"></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">✅ Publier le produit</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL MODIFICATION -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Modifier le produit</h2>
+                <button class="close-edit-modal">&times;</button>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label>Nom</label>
+                    <input type="text" id="editName" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Catégorie</label>
+                        <select id="editCategory" required>
+                            <option value="légume">🥬 Légume</option>
+                            <option value="tubercule">🥔 Tubercule</option>
+                            <option value="fruit">🍎 Fruit</option>
+                            <option value="herbe">🌿 Herbe/Feuille</option>
+                            <option value="épice">🌶️ Épice</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Prix</label>
+                        <div class="price-group">
+                            <input type="number" id="editPrice" required>
+                            <select id="editUnit">
+                                <option value="kg">kg</option>
+                                <option value="botte">botte</option>
+                                <option value="pièce">pièce</option>
+                                <option value="sac">sac</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantité</label>
+                        <input type="number" id="editQuantity" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Vendeur</label>
+                        <input type="text" id="editSeller" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp</label>
+                    <input type="tel" id="editPhone" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="editDesc" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" id="editPassword" placeholder="Votre mot de passe" required>
+                </div>
+                <button type="submit" class="submit-btn">💾 Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
